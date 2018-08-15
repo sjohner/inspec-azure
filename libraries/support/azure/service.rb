@@ -66,11 +66,15 @@ module Azure
       self
     end
 
-    def get(url:, api_version:)
+    def get(url:, api_version:, error: nil, unwrap: nil)
       confirm_configured!
 
       cache.fetch(url) do
         body = rest_client.get(url, params: { 'api-version' => api_version }).body
+
+        error&.call(body)
+
+        return unwrap.call(body, api_version) unless unwrap.nil?
         structify(body.fetch('value', body))
       end
     end
